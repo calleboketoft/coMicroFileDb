@@ -1,8 +1,8 @@
 {
   "name": "comicrofiledb",
   "version": "1.0.0",
-  "description": "```javascript var coMicroFileDb = require('coMicroFileDb')({   app: app, // express app   docsRootDir: path.resolve(__dirname, ''),   relevantFileName: 'README.md',   rootRoute: '/myfiles' }) ```",
-  "main": "microFileDbRoutes.js",
+  "description": "micromatic file db",
+  "main": "coMicroFileDb.js",
   "directories": {
     "example": "example"
   },
