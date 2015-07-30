@@ -36,7 +36,7 @@ module.exports = function(options) {
   app.use(rootRoute, docs)
 }
 
-function fileFormatter (file, data) {
+function fileFormatter (file, data, isSpecFile) {
   var dirSplit = file.split(path.sep)
   var fileInfo = {
     dirname: dirSplit[dirSplit.length-2],
@@ -47,6 +47,9 @@ function fileFormatter (file, data) {
   }
   if (data) {
     fileInfo.content = data
+  }
+  if (isSpecFile) {
+    fileInfo.specFile = true
   }
   return fileInfo
 }
@@ -95,11 +98,13 @@ function getFilesFromDocsRoot (options) {
       var deferFileRead = q.defer()
       deferreds.push(deferFileRead.promise)
 
+      var isSpecFile = currFileName === options.specFile
+
       // Read the contents of the specFile
-      if (currFileName === options.specFile) {
+      if (isSpecFile) {
         fs.readFile(file, 'utf8', function (err, data) {
           if (err) { throw err }
-          files.push(fileFormatter(file, data))
+          files.push(fileFormatter(file, data, isSpecFile))
           deferFileRead.resolve()
         })
       } else {
