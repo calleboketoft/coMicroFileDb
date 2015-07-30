@@ -38,11 +38,14 @@ module.exports = function(options) {
 
 function fileFormatter (file, data, isSpecFile) {
   var dirSplit = file.split(path.sep)
+  var filename = path.basename(file)
+  var filerelpath = file.slice(docsRootDir.length + 1)
   var fileInfo = {
-    filename: path.basename(file),
     dirname: dirSplit[dirSplit.length-2],
+    dirrelpath: filerelpath.slice(0, filerelpath.length - filename.length),
+    filename: filename,
     filepath: file,
-    filerelpath: file.slice(docsRootDir.length + 1),
+    filerelpath: filerelpath,
     extname: path.extname(file),
     typeoffile: CONST.FILE_TYPES[path.extname(file)]
   }
