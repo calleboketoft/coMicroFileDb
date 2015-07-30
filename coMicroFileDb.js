@@ -6,16 +6,28 @@ var express = require('express')
 var bodyParser = require('body-parser')
 
 // App configuration
-var relevantFilename
+var specFile
 var docsRootDir
 var app
 var rootRoute
+
+var CONST = {
+  SPEC_FILE: 'recipe.json',
+  FILE_TYPES: {
+    '.jpg': 'image',
+    '.png': 'image',
+    '.jpeg': 'image',
+    '.md': 'markdown',
+    '.pdf': 'pdf',
+    '.json': 'json'
+  }
+}
 
 module.exports = function(options) {
   app = options.app
   app.use(bodyParser())
   docsRootDir = options.docsRootDir || '../'
-  relevantFilename = options.relevantFileName || 'README.md'
+  specFile = options.specFile || CONST.SPEC_FILE
   rootRoute = options.rootRoute || '/myfiles'
 
   var docs = express.Router()
@@ -26,43 +38,84 @@ module.exports = function(options) {
 
 function fileFormatter (file, data) {
   var dirSplit = file.split(path.sep)
-  return {
-    content: data,
+  var fileInfo = {
     dirname: dirSplit[dirSplit.length-2],
     filepath: file,
-    filerelpath: file.slice(docsRootDir.length + 1)
+    filerelpath: file.slice(docsRootDir.length + 1),
+    extname: path.extname(file),
+    typeoffile: CONST.FILE_TYPES[path.extname(file)]
   }
+  if (data) {
+    fileInfo.content = data
+  }
+  return fileInfo
 }
 
-function getDocs (req, res, next) {
+function getDocs (req, res) {
+  getFilesFromDocsRoot({
+    specFile: specFile,
+    extnames: CONST.FILE_TYPES
+  }).then(function(files) {
+    res.json(files)
+  })
+}
+
+// options: {
+//   specFile: '',
+//   filetypes: [{'.jpg': 'image'}] 
+// }
+function getFilesFromDocsRoot (options) {
+  var dfd = q.defer()
   var finder = findit(docsRootDir)
   var files = []
   var deferreds = []
 
   finder.on('directory', function (dir, stat, stop) {
-    var base = path.basename(dir);
+    var base = path.basename(dir)
     if (base === '.git' || base === 'node_modules' || base === 'jspm_packages') stop()
   })
 
   finder.on('file', function (file, stat) {
     var currFileName = path.basename(file)
-    if(currFileName === relevantFilename) {
+    var currFileExt = path.extname(file)
+
+    function matcher () {
+      var itsAMatch = options.specFile === currFileName
+      if (!itsAMatch && options.extnames) {
+        Object.keys(options.extnames).forEach(function(extname) {
+          if (currFileExt === extname.toLowerCase()) {
+            itsAMatch = true
+          }
+        })
+      }
+      return itsAMatch
+    }
+
+    if (matcher()) {
       var deferFileRead = q.defer()
       deferreds.push(deferFileRead.promise)
 
-      fs.readFile(file, 'utf8', function(err, data) {
-        if (err) { throw err }
-        files.push(fileFormatter(file, data))
+      // Read the contents of the specFile
+      if (currFileName === options.specFile) {
+        fs.readFile(file, 'utf8', function (err, data) {
+          if (err) { throw err }
+          files.push(fileFormatter(file, data))
+          deferFileRead.resolve()
+        })
+      } else {
+        // It's one of the other files, just push the file info
+        files.push(fileFormatter(file))
         deferFileRead.resolve()
-      })
+      }
     }
   })
 
-  finder.on('end', function() {
-    q.all(deferreds).done(function() {
-        res.json(files)
+  finder.on('end', function () {
+    q.all(deferreds).done(function () {
+      dfd.resolve(files)
     })
   })
+  return dfd.promise
 }
 
 function postDoc (req, res, next) {

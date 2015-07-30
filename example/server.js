@@ -14,7 +14,7 @@ app.all('/*', function (req, res, next) {
 coMicroFileDb({
   app: app,
   docsRootDir: path.resolve(__dirname, 'somefiles'),
-  relevantFileName: 'testfile.json',
+  specFile: 'testfile.json',
   rootRoute: '/myfiles'
 })
 
