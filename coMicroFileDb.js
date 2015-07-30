@@ -39,6 +39,7 @@ module.exports = function(options) {
 function fileFormatter (file, data, isSpecFile) {
   var dirSplit = file.split(path.sep)
   var fileInfo = {
+    filename: path.basename(file),
     dirname: dirSplit[dirSplit.length-2],
     filepath: file,
     filerelpath: file.slice(docsRootDir.length + 1),
