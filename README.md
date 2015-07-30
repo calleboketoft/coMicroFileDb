@@ -4,7 +4,7 @@
 var coMicroFileDb = require('coMicroFileDb')({
   app: app, // express app
   docsRootDir: path.resolve(__dirname, ''),
-  relevantFileName: 'README.md',
+  specFile: 'README.md', // read the content of this file
   rootRoute: '/myfiles'
 })
 ```
