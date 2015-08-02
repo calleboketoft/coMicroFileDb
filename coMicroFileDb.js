@@ -19,7 +19,8 @@ var CONST = {
     '.jpeg': 'image',
     '.md': 'markdown',
     '.pdf': 'pdf',
-    '.json': 'json'
+    '.json': 'json',
+    '.JPG': 'image'
   }
 }
 
